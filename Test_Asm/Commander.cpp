@@ -127,6 +127,11 @@ void AsCommander::Run()
 							}
 							break;
 	
+						case VK_F3:
+							View_File();
+							Need_Redraw = true;
+							break;
+
 						case VK_F10:
 							Can_Run = false;
 							break;
@@ -257,3 +262,39 @@ void AsCommander::Show_Help_Window()
 	WriteConsoleOutput(Screen_Buffer_Handle, Screen_Buffer,
 		Screen_Buffer_Info.dwSize, { 0,0 }, &Screen_Buffer_Info.srWindow);
 }
+
+void AsCommander::View_File()
+{
+	const auto& files = Left_Panel->Get_Files();
+	int index = Left_Panel->Get_Current_Index();
+
+	if (index < 0 || index >= files.size())
+		return;
+
+	AFile_Descriptor* file = files[index];
+
+	if (file->Attributes & FILE_ATTRIBUTE_DIRECTORY)
+		return;
+
+	std::wstring full_path = Left_Panel->Get_Current_Directory() + L"\\" + file->File_Name;
+
+	// Открываем файл через _wfopen — работает ВСЕГДА
+	FILE* f = nullptr;
+	if (_wfopen_s(&f, full_path.c_str(), L"rt, ccs=UTF-8") != 0 || !f)
+	{
+		MessageBoxW(NULL, (L"Cannot open file:\n" + full_path).c_str(), L"Error", MB_OK);
+		return;
+	}
+
+
+	std::wstring content;
+	wchar_t buffer[1024];
+
+	while (fgetws(buffer, 1024, f))
+		content += buffer;
+
+	fclose(f);
+
+	MessageBoxW(NULL, content.c_str(), file->File_Name.c_str(), MB_OK);
+}
+

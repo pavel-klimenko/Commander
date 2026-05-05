@@ -26,6 +26,7 @@ public:
 	bool Init();
 	void Run();
 	void Show_Help_Window();
+	void View_File();
 
 private:
 	bool Draw();

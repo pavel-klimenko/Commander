@@ -15,7 +15,8 @@ AFile_Descriptor::AFile_Descriptor(unsigned int attributes, unsigned int size_lo
 // APanel
 //------------------------------------------------------------------------------------------------------------
 APanel::APanel(unsigned short x_pos, unsigned short y_pos, unsigned short width, unsigned short height, CHAR_INFO* screen_buffer, unsigned short screen_width)
-: X_Pos(x_pos), Y_Pos(y_pos), Width(width), Height(height), Screen_Buffer(screen_buffer), Screen_Width(screen_width)
+: X_Pos(x_pos), Y_Pos(y_pos), Width(width), Height(height), Screen_Buffer(screen_buffer), Screen_Width(screen_width),
+Curr_File_Index(0), Highlight_X_Offset(0), Highlight_Y_Offset(0)
 {
 }
 //------------------------------------------------------------------------------------------------------------
@@ -64,7 +65,8 @@ void APanel::Move_Highlight(bool move_up)
 	}
 	else
 	{
-		if (Curr_File_Index + 1 < Files.size() )
+		size_t idx = static_cast<size_t>(Curr_File_Index);
+		if (idx + 1 < Files.size() )
 		{
 			++Curr_File_Index;
 			++Highlight_Y_Offset;

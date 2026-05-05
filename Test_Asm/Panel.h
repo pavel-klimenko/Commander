@@ -10,7 +10,6 @@ class AFile_Descriptor
 {
 public:
 	AFile_Descriptor(unsigned int attributes, unsigned int size_low, unsigned int size_high, wchar_t *file_name);
-
 	unsigned int Attributes;
 	unsigned long long File_Size;
 	std::wstring File_Name;
@@ -25,6 +24,19 @@ public:
 	void Get_Directory_Files(const std::wstring &curr_dir);
 	void Move_Highlight(bool move_up);
 	void On_Enter();
+
+	const std::vector<AFile_Descriptor*>& Get_Files() const {
+		return Files;
+	}
+
+	int Get_Current_Index() const {
+		return Curr_File_Index;
+	}
+
+	const std::wstring& Get_Current_Directory() const {
+		return Current_Directory;
+	}
+
 
 private:
 	void Draw_Panel();
