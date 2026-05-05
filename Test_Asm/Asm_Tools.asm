@@ -407,4 +407,69 @@ _exit:
 
 Draw_Limited_Text endp
 ;-------------------------------------------------------------------------------------------------------------
+
+;-------------------------------------------------------------------------------------------------------------
+Build_Full_Path proc
+; extern "C" ; void Build_Full_Path(const wchar_t* dir, const wchar_t* name, wchar_t* out);
+; RCX = dir
+; RDX = name
+; R8  = out
+
+    push rsi
+    push rdi
+    push rbx
+
+	; RDI = out
+    mov rdi, r8 
+
+	;1. Копируем dir в out
+	; rsi = dir
+
+	mov rsi, rcx
+
+copy_dir:
+    mov ax, [rsi]
+    mov [rdi], ax
+    add rsi, 2
+    add rdi, 2
+    test ax, ax
+    jnz copy_dir
+
+    ; сейчас в out уже есть dir + L'\0'
+    ; откатываемся на один wchar назад, чтобы затереть '\0'
+    sub rdi, 2
+
+
+	; 2. Добавляем L'\\'
+
+	mov ax, '\'
+	mov [rdi], ax
+	add rdi, 2
+
+
+	; 2. Копируем name
+
+	; rsi = name
+	mov rsi, rdx
+
+copy_name:
+    mov ax, [rsi]
+    mov [rdi], ax
+    add rsi, 2
+    add rdi, 2
+    test ax, ax
+    jnz copy_name
+
+	; out = dir + '\' + name + '\0'
+
+	pop rbx
+    pop rdi
+    pop rsi
+
+	ret
+
+Build_Full_Path endp
+;-------------------------------------------------------------------------------------------------------------
+
+
 end

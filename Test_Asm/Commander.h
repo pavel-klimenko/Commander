@@ -27,6 +27,7 @@ public:
 	void Run();
 	void Show_Help_Window();
 	void View_File();
+	void Make_Directory();
 
 private:
 	bool Draw();

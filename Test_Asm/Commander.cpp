@@ -132,6 +132,10 @@ void AsCommander::Run()
 							Need_Redraw = true;
 							break;
 
+						case VK_F7:
+							Make_Directory();
+							Need_Redraw = true;
+							break;
 						case VK_F10:
 							Can_Run = false;
 							break;
@@ -296,5 +300,94 @@ void AsCommander::View_File()
 	fclose(f);
 
 	MessageBoxW(NULL, content.c_str(), file->File_Name.c_str(), MB_OK);
+}
+
+void AsCommander::Make_Directory()
+{
+	// Размеры окна ввода
+	int w = 40;
+	int h = 6;
+
+	int x = (Screen_Buffer_Info.dwSize.X - w) / 2;
+	int y = (Screen_Buffer_Info.dwSize.Y - h) / 2;
+
+	// Рисуем рамку
+	Help input_box(x, y, w, h, Screen_Buffer, Screen_Buffer_Info.dwSize.X);
+	input_box.Draw();
+
+	// Текст приглашения
+	SText_Pos pos(x + 2, y + 1, Screen_Buffer_Info.dwSize.X, 0x1F);
+	Draw_Text(Screen_Buffer, pos, L"Enter directory name:");
+
+	// Поле ввода
+	std::wstring name;
+	int max_len = w - 4;
+
+	WriteConsoleOutput(Screen_Buffer_Handle, Screen_Buffer,
+		Screen_Buffer_Info.dwSize, { 0,0 }, &Screen_Buffer_Info.srWindow);
+
+	// Чтение клавиш
+	while (true)
+	{
+		INPUT_RECORD rec;
+		DWORD cnt;
+		ReadConsoleInput(Std_Input_Handle, &rec, 1, &cnt);
+
+		if (rec.EventType == KEY_EVENT && rec.Event.KeyEvent.bKeyDown)
+		{
+			wchar_t ch = rec.Event.KeyEvent.uChar.UnicodeChar;
+			WORD vk = rec.Event.KeyEvent.wVirtualKeyCode;
+
+			// Enter → создать каталог
+			if (vk == VK_RETURN)
+				break;
+
+			// Esc → отмена
+			if (vk == VK_ESCAPE)
+				return;
+
+			// Backspace
+			if (vk == VK_BACK && !name.empty())
+			{
+				name.pop_back();
+			}
+			// Печатаемые символы
+			else if (ch >= 32 && ch < 127 && name.size() < max_len)
+			{
+				name.push_back(ch);
+			}
+
+			// Перерисовать поле ввода
+			std::wstring line = name;
+			while (line.size() < max_len) line.push_back(L' ');
+
+			SText_Pos pos2(x + 2, y + 4, Screen_Buffer_Info.dwSize.X, 0x1E);
+			Draw_Text(Screen_Buffer, pos2, line.c_str());
+
+			WriteConsoleOutput(Screen_Buffer_Handle, Screen_Buffer,
+				Screen_Buffer_Info.dwSize, { 0,0 }, &Screen_Buffer_Info.srWindow);
+		}
+	}
+
+	// Если имя пустое — ничего не делаем
+	if (name.empty())
+		return;
+
+	// Формируем путь
+	const std::wstring& base = Left_Panel->Get_Current_Directory();
+
+	wchar_t full_path[260] = { 0 };
+	Build_Full_Path(base.c_str(), name.c_str(), full_path);
+
+
+	// Создаём каталог
+	if (CreateDirectoryW(full_path, NULL)) {
+		MessageBoxW(NULL, L"Directory created.", L"F7 MakeDir", MB_OK);
+	} else {
+		MessageBoxW(NULL, full_path, L"Cannot create directory", MB_OK);
+	}
+
+	// Обновляем панель
+	Left_Panel->Get_Directory_Files(Left_Panel->Get_Current_Directory());
 }
 
