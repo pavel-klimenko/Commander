@@ -28,6 +28,8 @@ public:
 	void Show_Help_Window();
 	void View_File();
 	void Make_Directory();
+	void Delete_Selected();
+	bool Delete_Directory_Recursive(const std::wstring& dir);
 
 private:
 	bool Draw();

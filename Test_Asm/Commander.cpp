@@ -136,6 +136,10 @@ void AsCommander::Run()
 							Make_Directory();
 							Need_Redraw = true;
 							break;
+						case VK_F8:
+							Delete_Selected();
+							Need_Redraw = true;
+							break;
 						case VK_F10:
 							Can_Run = false;
 							break;
@@ -389,5 +393,95 @@ void AsCommander::Make_Directory()
 
 	// Обновляем панель
 	Left_Panel->Get_Directory_Files(Left_Panel->Get_Current_Directory());
+}
+
+void AsCommander::Delete_Selected()
+{
+	AFile_Descriptor* file = Left_Panel->Get_Selected_File();
+	if (file == nullptr)
+		return;
+
+	std::wstring path = file->Full_Path;
+
+	// Подтверждение
+	std::wstring msg = L"Delete:\n";
+	msg += path;
+	msg += L"\n\nAre you sure?";
+
+	int res = MessageBoxW(NULL, msg.c_str(), L"Delete", MB_YESNO | MB_ICONQUESTION);
+	if (res != IDYES)
+		return;
+
+	DWORD attr = GetFileAttributesW(path.c_str());
+	if (attr == INVALID_FILE_ATTRIBUTES)
+	{
+		MessageBoxW(NULL, L"Cannot get file attributes.", L"Error", MB_OK | MB_ICONERROR);
+		return;
+	}
+
+	bool ok = false;
+
+	if (attr & FILE_ATTRIBUTE_DIRECTORY)
+	{
+		// Удаляем директорию (включая непустую)
+		ok = Delete_Directory_Recursive(path);
+	}
+	else
+	{
+		// Удаляем файл
+		ok = DeleteFileW(path.c_str());
+	}
+
+	if (!ok)
+	{
+		MessageBoxW(NULL, L"Delete failed.", L"Error", MB_OK | MB_ICONERROR);
+		return;
+	}
+
+	// Обновляем панель
+	Left_Panel->Get_Directory_Files(Left_Panel->Get_Current_Directory());
+}
+
+bool AsCommander::Delete_Directory_Recursive(const std::wstring& dir)
+{
+	WIN32_FIND_DATAW ffd;
+	std::wstring search = dir + L"\\*";
+	HANDLE hFind = FindFirstFileW(search.c_str(), &ffd);
+
+	if (hFind == INVALID_HANDLE_VALUE)
+		return false;
+
+	do
+	{
+		std::wstring name = ffd.cFileName;
+
+		if (name == L"." || name == L"..")
+			continue;
+
+		std::wstring full = dir + L"\\" + name;
+
+		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		{
+			if (!Delete_Directory_Recursive(full))
+			{
+				FindClose(hFind);
+				return false;
+			}
+		}
+		else
+		{
+			if (!DeleteFileW(full.c_str()))
+			{
+				FindClose(hFind);
+				return false;
+			}
+		}
+
+	} while (FindNextFileW(hFind, &ffd));
+
+	FindClose(hFind);
+
+	// Теперь удаляем саму директорию
+	return RemoveDirectoryW(dir.c_str());
 }
 
