@@ -429,7 +429,8 @@ void AsCommander::Delete_Selected()
 	else
 	{
 		// Удаляем файл
-		ok = DeleteFileW(path.c_str());
+		//ok = DeleteFileW(path.c_str());
+		ok = Delete_File_W(path.c_str());
 	}
 
 	if (!ok)

@@ -10,3 +10,4 @@ extern "C" void Clear_Area(CHAR_INFO *screen_buffer, SArea_Pos area_pos, ASymbol
 extern "C" int Draw_Text(CHAR_INFO *screen_buffer, SText_Pos pos, const wchar_t *str);
 extern "C" void Draw_Limited_Text(CHAR_INFO *screen_buffer, SText_Pos pos, const wchar_t *str, unsigned short limit);
 extern "C" void Build_Full_Path(const wchar_t* dir, const wchar_t* name, wchar_t* out);
+extern "C" bool Delete_File_W(const wchar_t* path);
