@@ -48,6 +48,9 @@
     <ClCompile Include="Help.cpp">
       <Filter>Help</Filter>
     </ClCompile>
+    <ClCompile Include="Options.cpp">
+      <Filter>Commander</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Main.h">
@@ -68,10 +71,21 @@
     <ClInclude Include="Help.h">
       <Filter>Help</Filter>
     </ClInclude>
+    <ClInclude Include="resource.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Options.h">
+      <Filter>Commander</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <MASM Include="Asm_Tools.asm">
       <Filter>Asm_Tools</Filter>
     </MASM>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Commander.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

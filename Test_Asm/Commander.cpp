@@ -1,4 +1,5 @@
 ﻿#include "Commander.h"
+#include "Options.h"
 
 // AMenu_Item
 //------------------------------------------------------------------------------------------------------------
@@ -18,9 +19,6 @@ void AMenu_Item::Draw(CHAR_INFO *screen_buffer, unsigned short screen_width)
 	Draw_Limited_Text(screen_buffer, name_pos, Name, Len);
 }
 //------------------------------------------------------------------------------------------------------------
-
-
-
 
 // AsCommander
 //------------------------------------------------------------------------------------------------------------
@@ -126,30 +124,43 @@ void AsCommander::Run()
 								}
 							}
 							break;
-	
 						case VK_F3:
 							View_File();
 							Need_Redraw = true;
 							break;
-
 						case VK_F7:
 							Make_Directory();
 							Need_Redraw = true;
 							break;
+						case VK_F9:
+							Show_Config_Window();
+							while (true)
+							{
+								INPUT_RECORD rec;
+								DWORD cnt;
+
+								ReadConsoleInput(Std_Input_Handle, &rec, 1, &cnt);
+
+								if (rec.EventType == KEY_EVENT &&
+									rec.Event.KeyEvent.bKeyDown &&
+									rec.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)
+								{
+									Need_Redraw = true; // перерисовать панели
+									break;
+								}
+							}
+							break;
 						case VK_F10:
 							Can_Run = false;
 							break;
-
 						case VK_UP:
 							Left_Panel->Move_Highlight(true);
 							Need_Redraw = true;
 							break;
-
 						case VK_DOWN:
 							Left_Panel->Move_Highlight(false);
 							Need_Redraw = true;
 							break;
-
 						case VK_RETURN:
 							Left_Panel->On_Enter();
 							Need_Redraw = true;
@@ -389,5 +400,167 @@ void AsCommander::Make_Directory()
 
 	// Обновляем панель
 	Left_Panel->Get_Directory_Files(Left_Panel->Get_Current_Directory());
+}
+
+bool AsCommander::Show_Config_Window()
+{
+	// Загружаем опции перед показом
+	LoadOptionsFromIni();
+
+	// Опции и подписи
+	static const wchar_t* const opt_names[] = {
+		L"Show hidden files",
+		L"Confirm on delete",
+		L"Use quick view",
+		L"Wrap text in viewer",
+		L"Show file extensions"
+	};
+	const int OPT_COUNT = (int)_countof(opt_names);
+
+	// Локальная копия значений (чтобы можно было отменить изменения)
+	bool opt_values[OPT_COUNT] = {
+		GlobalOptions.ShowHiddenFiles,
+		GlobalOptions.ConfirmOnDelete,
+		GlobalOptions.UseQuickView,
+		GlobalOptions.WrapText,
+		GlobalOptions.ShowFileExtensions
+	};
+
+	// Размер и позиция окна по центру
+	int w = 60;
+	int h = OPT_COUNT + 6; // заголовок + строки + подсказка
+	int x = (Screen_Buffer_Info.dwSize.X - w) / 2;
+	int y = (Screen_Buffer_Info.dwSize.Y - h) / 2;
+	if (x < 0) x = 0;
+	if (y < 0) y = 0;
+
+	// Рисуем окно (используем ваш Help класс для рамки)
+	Help cfgWin(x, y, w, h, Screen_Buffer, Screen_Buffer_Info.dwSize.X);
+	cfgWin.Draw();
+
+	// Позиция текста
+	SText_Pos pos(x + 2, y + 1, Screen_Buffer_Info.dwSize.X, 0x1F);
+
+	// Вспомогательная функция рисования всего окна с подсветкой
+	auto draw_all = [&](int highlight) {
+		// Заголовок
+		pos.X_Pos = x + 2;
+		pos.Y_Pos = y + 1;
+		Draw_Text(Screen_Buffer, pos, L"Configuration");
+		pos.Y_Pos++;
+
+		// Чекбоксы
+		for (int i = 0; i < OPT_COUNT; ++i)
+		{
+			pos.X_Pos = x + 2;
+			// Формируем строку
+			wchar_t line[256];
+			swprintf_s(line, L"[%c] %s", opt_values[i] ? L'X' : L' ', opt_names[i]);
+
+			// Если подсвечено — рисуем инвертированным атрибутом
+			if (i == highlight)
+			{
+				// временно изменить атрибут в буфере: используем Draw_Text, но перед этим можно установить атрибут
+				// предполагается, что Draw_Text пишет в Screen_Buffer с учётом pos.Attribute
+				// если Draw_Text не поддерживает атрибут, можно рисовать обычным текстом — подсветка будет зависеть от реализации Help/Draw_Text
+				// Для совместимости просто добавим маркер ">" слева
+				wchar_t line2[300];
+				swprintf_s(line2, L"> %s", line);
+				Draw_Text(Screen_Buffer, pos, line2);
+			}
+			else
+			{
+				Draw_Text(Screen_Buffer, pos, line);
+			}
+			pos.Y_Pos++;
+		}
+
+		// Подсказка
+		pos.X_Pos = x + 2;
+		pos.Y_Pos = y + h - 2;
+		Draw_Text(Screen_Buffer, pos, L"Up/Down - move,  Space - toggle,  Enter - save,  Esc - cancel");
+
+		// Выводим буфер на экран
+		WriteConsoleOutput(Screen_Buffer_Handle, Screen_Buffer,
+			Screen_Buffer_Info.dwSize, { 0,0 }, &Screen_Buffer_Info.srWindow);
+	};
+
+	// Скрыть курсор
+	CONSOLE_CURSOR_INFO oldCursorInfo;
+	GetConsoleCursorInfo(Std_Output_Handle, &oldCursorInfo);
+	CONSOLE_CURSOR_INFO ci = oldCursorInfo;
+	ci.bVisible = FALSE;
+	SetConsoleCursorInfo(Std_Output_Handle, &ci);
+
+	// Начальное выделение
+	int highlight = 0;
+	draw_all(highlight);
+
+	// Модальный цикл обработки ввода
+	bool saved = false;
+	while (true)
+	{
+		INPUT_RECORD rec;
+		DWORD cnt = 0;
+		if (!ReadConsoleInputW(Std_Input_Handle, &rec, 1, &cnt))
+			break; // при ошибке выходим
+
+		if (cnt == 0) continue;
+
+		if (rec.EventType == KEY_EVENT && rec.Event.KeyEvent.bKeyDown)
+		{
+			WORD vk = rec.Event.KeyEvent.wVirtualKeyCode;
+			switch (vk)
+			{
+			case VK_UP:
+				highlight = (highlight - 1 + OPT_COUNT) % OPT_COUNT;
+				draw_all(highlight);
+				break;
+
+			case VK_DOWN:
+				highlight = (highlight + 1) % OPT_COUNT;
+				draw_all(highlight);
+				break;
+
+			case VK_SPACE:
+				opt_values[highlight] = !opt_values[highlight];
+				draw_all(highlight);
+				break;
+
+			case VK_RETURN:
+				// Сохраняем изменения в GlobalOptions и в INI
+				GlobalOptions.ShowHiddenFiles = opt_values[0];
+				GlobalOptions.ConfirmOnDelete = opt_values[1];
+				GlobalOptions.UseQuickView = opt_values[2];
+				GlobalOptions.WrapText = opt_values[3];
+				GlobalOptions.ShowFileExtensions = opt_values[4];
+				SaveOptionsToIni();
+				saved = true;
+				// пометка перерисовки основного интерфейса
+				Need_Redraw = true;
+				goto finish; // выйти из цикла и восстановить курсор
+
+			case VK_ESCAPE:
+				// отмена — не сохраняем, просто выходим
+				Need_Redraw = true;
+				goto finish;
+			}
+		}
+	}
+
+finish:
+	// Восстановить курсор
+	SetConsoleCursorInfo(Std_Output_Handle, &oldCursorInfo);
+
+	// Перерисуем основной экран (если нужно)
+	if (Need_Redraw)
+	{
+		Draw();
+
+		// Ваш основной Draw() вызов в цикле сделает перерисовку.
+		// Здесь можно вызвать Draw() напрямую, но лучше пометить Need_Redraw = true и позволить основному циклу перерисовать.
+	}
+
+	return saved;
 }
 

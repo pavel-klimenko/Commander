@@ -28,6 +28,7 @@ public:
 	void Show_Help_Window();
 	void View_File();
 	void Make_Directory();
+	bool Show_Config_Window();
 
 private:
 	bool Draw();
@@ -44,7 +45,6 @@ private:
 
 	APanel *Left_Panel = 0;
 	APanel *Right_Panel = 0;
-
 	AMenu_Item *Menu_Items[10]{};
 };
 //------------------------------------------------------------------------------------------------------------

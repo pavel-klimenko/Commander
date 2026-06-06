@@ -145,6 +145,7 @@
     <ClCompile Include="Common.cpp" />
     <ClCompile Include="Help.cpp" />
     <ClCompile Include="Main.cpp" />
+    <ClCompile Include="Options.cpp" />
     <ClCompile Include="Panel.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -156,7 +157,12 @@
     <ClInclude Include="Common.h" />
     <ClInclude Include="Help.h" />
     <ClInclude Include="Main.h" />
+    <ClInclude Include="Options.h" />
     <ClInclude Include="Panel.h" />
+    <ClInclude Include="resource.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="Commander.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
