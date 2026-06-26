@@ -45,6 +45,9 @@ void APanel::Get_Directory_Files(const std::wstring &curr_dir)
 	while (FindNextFileW(search_handle, &find_data) )
 	{
 		AFile_Descriptor *file_descriptor = new AFile_Descriptor(find_data.dwFileAttributes, find_data.nFileSizeLow, find_data.nFileSizeHigh, find_data.cFileName);
+
+		file_descriptor->Full_Path = Current_Directory + L"\\" + find_data.cFileName;
+
 		Files.push_back(file_descriptor);
 	}
 
@@ -195,4 +198,16 @@ void APanel::Draw_Highlight()
 
 	Draw_One_File(file_descriptor, Highlight_X_Offset, Highlight_Y_Offset, 0x20);
 }
+
+AFile_Descriptor* APanel::Get_Selected_File() const
+{
+	if (Files.empty())
+		return nullptr;
+
+	if (Curr_File_Index >= Files.size())
+		return nullptr;
+
+	return Files[Curr_File_Index];
+}
+
 //------------------------------------------------------------------------------------------------------------

@@ -13,6 +13,7 @@ public:
 	unsigned int Attributes;
 	unsigned long long File_Size;
 	std::wstring File_Name;
+	std::wstring Full_Path;
 };
 //------------------------------------------------------------------------------------------------------------
 class APanel
@@ -36,6 +37,8 @@ public:
 	const std::wstring& Get_Current_Directory() const {
 		return Current_Directory;
 	}
+
+	AFile_Descriptor* Get_Selected_File() const;
 
 
 private:

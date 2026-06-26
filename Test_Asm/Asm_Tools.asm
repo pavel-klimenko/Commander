@@ -1,3 +1,5 @@
+EXTERN DeleteFileW:PROC
+
 .code
 ;-------------------------------------------------------------------------------------------------------------
 Make_Sum proc
@@ -471,5 +473,24 @@ copy_name:
 Build_Full_Path endp
 ;-------------------------------------------------------------------------------------------------------------
 
+Delete_File_W proc
+	; bool Delete_File_W(const wchar_t* path)
+	; RCX = path
+	; return: RAX = 0 (false) / 1 (true)
+
+    sub     rsp, 32            ; shadow space под Win64 ABI
+
+    call    DeleteFileW        ; DeleteFileW(path)
+
+    add     rsp, 32
+
+    ; нормализуем результат в 0/1
+    test    rax, rax
+    setnz   al
+    movzx   rax, al
+
+    ret
+Delete_File_W endp
+;-------------------------------------------------------------------------------------------------------------
 
 end
