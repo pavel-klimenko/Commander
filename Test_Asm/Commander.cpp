@@ -405,6 +405,7 @@ void AsCommander::Make_Directory()
 bool AsCommander::Show_Config_Window()
 {
 	// Загружаем опции перед показом
+	InitConfigPath();
 	LoadOptionsFromIni();
 
 	// Опции и подписи
@@ -563,4 +564,3 @@ finish:
 
 	return saved;
 }
-

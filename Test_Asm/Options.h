@@ -15,6 +15,7 @@ struct Options
 // ќбъ€влени€ функций
 void LoadOptionsFromIni();
 void SaveOptionsToIni();
+void InitConfigPath();
 
 // √лобальна€ переменна€, объ€вление extern
 extern Options GlobalOptions;
