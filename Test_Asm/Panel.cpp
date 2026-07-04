@@ -10,8 +10,6 @@ AFile_Descriptor::AFile_Descriptor(unsigned int attributes, unsigned int size_lo
 //------------------------------------------------------------------------------------------------------------
 
 
-
-
 // APanel
 //------------------------------------------------------------------------------------------------------------
 APanel::APanel(unsigned short x_pos, unsigned short y_pos, unsigned short width, unsigned short height, CHAR_INFO* screen_buffer, unsigned short screen_width)
@@ -210,4 +208,3 @@ AFile_Descriptor* APanel::Get_Selected_File() const
 	return Files[Curr_File_Index];
 }
 
-//------------------------------------------------------------------------------------------------------------

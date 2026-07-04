@@ -132,6 +132,10 @@ void AsCommander::Run()
 							Make_Directory();
 							Need_Redraw = true;
 							break;
+						case VK_F8:
+							AsCommander::Delete_Selected();
+							Need_Redraw = true;
+							break;
 						case VK_F9:
 							Show_Config_Window();
 							while (true)
@@ -563,4 +567,134 @@ finish:
 	}
 
 	return saved;
+}
+
+bool AsCommander::Confirm(const std::wstring& msg)
+{
+	int w = 50;
+	int h = 7;
+
+	int x = (Screen_Buffer_Info.dwSize.X - w) / 2;
+	int y = (Screen_Buffer_Info.dwSize.Y - h) / 2;
+
+	Help win(x, y, w, h, Screen_Buffer, Screen_Buffer_Info.dwSize.X);
+	win.Draw();
+
+	SText_Pos pos(x + 2, y + 2, Screen_Buffer_Info.dwSize.X, 0x1F);
+	Draw_Text(Screen_Buffer, pos, msg.c_str());
+
+	pos.Y_Pos += 2;
+	Draw_Text(Screen_Buffer, pos, L"[Enter] Yes    [Esc] No");
+
+	WriteConsoleOutput(Screen_Buffer_Handle, Screen_Buffer,
+		Screen_Buffer_Info.dwSize, { 0,0 }, &Screen_Buffer_Info.srWindow);
+
+	while (true)
+	{
+		INPUT_RECORD rec;
+		DWORD cnt;
+
+		ReadConsoleInput(Std_Input_Handle, &rec, 1, &cnt);
+
+		if (rec.EventType == KEY_EVENT && rec.Event.KeyEvent.bKeyDown)
+		{
+			switch (rec.Event.KeyEvent.wVirtualKeyCode)
+			{
+			case VK_RETURN:
+				return true;
+			case VK_ESCAPE:
+				return false;
+			}
+		}
+	}
+}
+
+void AsCommander::Delete_Selected()
+{
+	AFile_Descriptor* file = Left_Panel->Get_Selected_File();
+	if (!file)
+		return;
+
+	//TODO не работает ConfirmOnDelete
+
+	if (GlobalOptions.ConfirmOnDelete)
+	{
+		std::wstring msg = L"Delete: " + file->Full_Path + L" ?";
+		if (!AsCommander::Confirm(msg))
+			return;
+	}
+
+	bool ok = false;
+
+	if (file->Attributes & FILE_ATTRIBUTE_DIRECTORY)
+	{
+		ok = Delete_Directory_Recursive(file->Full_Path);
+	}
+	else
+	{
+		ok = Delete_File(file->Full_Path);
+	}
+
+	if (!ok)
+	{
+		MessageBoxW(NULL, L"Не удалось удалить файл или директорию", L"Ошибка", MB_OK);
+	}
+
+	// Обновляем список файлов
+	Left_Panel->Get_Directory_Files(Left_Panel->Get_Current_Directory());
+}
+
+bool AsCommander::Delete_File(const std::wstring& path)
+{
+	return DeleteFileW(path.c_str());
+}
+
+bool AsCommander::Delete_Directory_Recursive(const std::wstring& dir)
+{
+	WIN32_FIND_DATAW ffd;
+	HANDLE hFind = INVALID_HANDLE_VALUE;
+
+	std::wstring search_path = dir + L"\\*";
+
+	hFind = FindFirstFileW(search_path.c_str(), &ffd);
+	if (hFind == INVALID_HANDLE_VALUE)
+		return false;
+
+	do
+	{
+		std::wstring name = ffd.cFileName;
+
+		if (name == L"." || name == L"..")
+			continue;
+
+		std::wstring full_path = dir + L"\\" + name;
+
+		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+		{
+			// рекурсивно удаляем вложенную директорию
+			if (!Delete_Directory_Recursive(full_path))
+			{
+				FindClose(hFind);
+				return false;
+			}
+		}
+		else
+		{
+			// удаляем файл
+			if (!DeleteFileW(full_path.c_str()))
+			{
+				FindClose(hFind);
+				return false;
+			}
+		}
+
+	} while (FindNextFileW(hFind, &ffd) != 0);
+
+	FindClose(hFind);
+
+	// удаляем саму директорию
+	if (!RemoveDirectoryW(dir.c_str()))
+		return false;
+
+	return true;
 }

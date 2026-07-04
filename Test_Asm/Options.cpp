@@ -5,7 +5,7 @@
 #pragma comment(lib, "Shlwapi.lib")
 
 
-Options GlobalOptions; // определение переменной
+Options GlobalOptions;
 
 wchar_t CONFIG_INI[MAX_PATH];
 
@@ -64,6 +64,3 @@ void InitConfigPath()
         }
     }
 }
-
-
-//TODO выгрузка в GIT

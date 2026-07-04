@@ -1,5 +1,5 @@
 #pragma once
-
+#include "options.h"
 #include "Panel.h"
 #include "Help.h"
 #include <stdio.h>
@@ -29,6 +29,10 @@ public:
 	void View_File();
 	void Make_Directory();
 	bool Show_Config_Window();
+	bool Confirm(const std::wstring& msg);
+	void Delete_Selected();
+	bool Delete_File(const std::wstring& path);
+	bool Delete_Directory_Recursive(const std::wstring& dir);
 
 private:
 	bool Draw();
