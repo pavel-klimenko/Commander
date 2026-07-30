@@ -83,6 +83,9 @@ bool AsCommander::Init()
 
 	Left_Panel->Get_Directory_Files(std::wstring(curr_dir) );
 
+	InitConfigPath();
+	LoadOptionsFromIni();
+
 	return true;
 }
 //------------------------------------------------------------------------------------------------------------
@@ -408,9 +411,7 @@ void AsCommander::Make_Directory()
 
 bool AsCommander::Show_Config_Window()
 {
-	// Загружаем опции перед показом
-	InitConfigPath();
-	LoadOptionsFromIni();
+	// TODO подвисает после смены конфига
 
 	// Опции и подписи
 	static const wchar_t* const opt_names[] = {
@@ -421,6 +422,7 @@ bool AsCommander::Show_Config_Window()
 		L"Show file extensions"
 	};
 	const int OPT_COUNT = (int)_countof(opt_names);
+
 
 	// Локальная копия значений (чтобы можно было отменить изменения)
 	bool opt_values[OPT_COUNT] = {
@@ -611,11 +613,11 @@ bool AsCommander::Confirm(const std::wstring& msg)
 
 void AsCommander::Delete_Selected()
 {
+	// Загружаем опции
+
 	AFile_Descriptor* file = Left_Panel->Get_Selected_File();
 	if (!file)
 		return;
-
-	//TODO не работает ConfirmOnDelete
 
 	if (GlobalOptions.ConfirmOnDelete)
 	{
