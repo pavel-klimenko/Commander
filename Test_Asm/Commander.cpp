@@ -246,7 +246,6 @@ void AsCommander::Build_Menu()
 	Add_Next_Menu_Item(index, x_pos, x_step, L"F10", L"Quit");
 }
 //------------------------------------------------------------------------------------------------------------
-
 void AsCommander::Show_Help_Window()
 {
 	int w = 50;
@@ -287,6 +286,8 @@ void AsCommander::Show_Help_Window()
 
 void AsCommander::View_File()
 {
+	if (!GlobalOptions.UseQuickView) return;
+
 	const auto& files = Left_Panel->Get_Files();
 	int index = Left_Panel->Get_Current_Index();
 
@@ -418,8 +419,6 @@ bool AsCommander::Show_Config_Window()
 		L"Show hidden files",
 		L"Confirm on delete",
 		L"Use quick view",
-		L"Wrap text in viewer",
-		L"Show file extensions"
 	};
 	const int OPT_COUNT = (int)_countof(opt_names);
 
@@ -429,12 +428,10 @@ bool AsCommander::Show_Config_Window()
 		GlobalOptions.ShowHiddenFiles,
 		GlobalOptions.ConfirmOnDelete,
 		GlobalOptions.UseQuickView,
-		GlobalOptions.WrapText,
-		GlobalOptions.ShowFileExtensions
 	};
 
 	// Размер и позиция окна по центру
-	int w = 60;
+	int w = 65;
 	int h = OPT_COUNT + 6; // заголовок + строки + подсказка
 	int x = (Screen_Buffer_Info.dwSize.X - w) / 2;
 	int y = (Screen_Buffer_Info.dwSize.Y - h) / 2;
@@ -483,7 +480,7 @@ bool AsCommander::Show_Config_Window()
 		}
 
 		// Подсказка
-		pos.X_Pos = x + 2;
+		pos.X_Pos = x + 1;
 		pos.Y_Pos = y + h - 2;
 		Draw_Text(Screen_Buffer, pos, L"Up/Down - move,  Space - toggle,  Enter - save,  Esc - cancel");
 
@@ -539,8 +536,6 @@ bool AsCommander::Show_Config_Window()
 				GlobalOptions.ShowHiddenFiles = opt_values[0];
 				GlobalOptions.ConfirmOnDelete = opt_values[1];
 				GlobalOptions.UseQuickView = opt_values[2];
-				GlobalOptions.WrapText = opt_values[3];
-				GlobalOptions.ShowFileExtensions = opt_values[4];
 				SaveOptionsToIni();
 				saved = true;
 				// пометка перерисовки основного интерфейса

@@ -7,10 +7,7 @@ struct Options
 	bool ShowHiddenFiles;
 	bool ConfirmOnDelete;
 	bool UseQuickView;
-	bool WrapText;
-	bool ShowFileExtensions;
 };
-
 
 // Объявления функций
 void LoadOptionsFromIni();
