@@ -1,6 +1,13 @@
 ﻿#include "Commander.h"
 #include "Options.h"
 
+
+//TODO интегрировать указатели
+//TODO оптимизация кода по памяти (получения памяти, ручная очистка памяти)
+//TODO тест расходов памяти до и после оптимизации
+//TODO использовать ассемблерные функции
+//TODO stl итераторы рассмотреть
+
 // AMenu_Item
 //------------------------------------------------------------------------------------------------------------
 AMenu_Item::AMenu_Item(unsigned short x_pos, unsigned short y_pos, unsigned short len, const wchar_t *key, const wchar_t *name)
