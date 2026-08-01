@@ -68,12 +68,7 @@ bool AsCommander::Init()
 	Screen_Buffer = new CHAR_INFO[screen_buffer_size];
 	memset(Screen_Buffer, 0, screen_buffer_size * sizeof(CHAR_INFO));
 
-	// Set the destination rectangle.
 
-	srctWriteRect.Top = 10;    // top lt: row 10, col 0
-	srctWriteRect.Left = 0;
-	srctWriteRect.Bottom = 11; // bot. rt: row 11, col 79
-	srctWriteRect.Right = 79;
 
 	int half_width = Screen_Buffer_Info.dwSize.X / 2;
 	Left_Panel = new APanel(0, 0, half_width, Screen_Buffer_Info.dwSize.Y - 2, Screen_Buffer, Screen_Buffer_Info.dwSize.X);

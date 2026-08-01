@@ -4,7 +4,6 @@
 #include <Shlwapi.h>
 #pragma comment(lib, "Shlwapi.lib")
 
-
 Options GlobalOptions;
 
 wchar_t CONFIG_INI[MAX_PATH];

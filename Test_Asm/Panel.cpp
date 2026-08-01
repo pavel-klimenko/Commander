@@ -1,4 +1,5 @@
 ﻿#include "Panel.h"
+#include "Options.h"
 
 // AFile_Descriptor
 //------------------------------------------------------------------------------------------------------------
@@ -24,25 +25,37 @@ void APanel::Draw()
 	Draw_Files();
 	Draw_Highlight();
 }
+
 //------------------------------------------------------------------------------------------------------------
-void APanel::Get_Directory_Files(const std::wstring &curr_dir)
+void APanel::Get_Directory_Files(const std::wstring& curr_dir)
 {
+	InitConfigPath(); //TODO need?
+	LoadOptionsFromIni();
+
 	HANDLE search_handle;
 	WIN32_FIND_DATAW find_data{};
 
-	for (auto *file : Files)
+	for (auto* file : Files)
 		delete file;
 
-	Files.erase(Files.begin(), Files.end() );
+	Files.erase(Files.begin(), Files.end());
 
 	Current_Directory = curr_dir;
 
 	std::wstring file_path = curr_dir + L"\\*.*";
 	search_handle = FindFirstFileW(file_path.c_str(), &find_data);
 
-	while (FindNextFileW(search_handle, &find_data) )
+	while (FindNextFileW(search_handle, &find_data))
 	{
-		AFile_Descriptor *file_descriptor = new AFile_Descriptor(find_data.dwFileAttributes, find_data.nFileSizeLow, find_data.nFileSizeHigh, find_data.cFileName);
+		bool showHidden = GlobalOptions.ShowHiddenFiles;
+		bool isHidden = (find_data.dwFileAttributes & FILE_ATTRIBUTE_HIDDEN) != 0;
+
+		if (!showHidden && isHidden) {
+			continue;
+		}
+			
+
+		AFile_Descriptor* file_descriptor = new AFile_Descriptor(find_data.dwFileAttributes, find_data.nFileSizeLow, find_data.nFileSizeHigh, find_data.cFileName);
 
 		file_descriptor->Full_Path = Current_Directory + L"\\" + find_data.cFileName;
 
@@ -53,6 +66,7 @@ void APanel::Get_Directory_Files(const std::wstring &curr_dir)
 	Highlight_X_Offset = 0;
 	Highlight_Y_Offset = 0;
 }
+
 //------------------------------------------------------------------------------------------------------------
 void APanel::Move_Highlight(bool move_up)
 {
