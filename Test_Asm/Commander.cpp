@@ -143,22 +143,11 @@ void AsCommander::Run()
 							break;
 						case VK_F9:
 							Show_Config_Window();
-							while (true)
-							{
-								INPUT_RECORD rec;
-								DWORD cnt;
-
-								ReadConsoleInput(Std_Input_Handle, &rec, 1, &cnt);
-
-								if (rec.EventType == KEY_EVENT &&
-									rec.Event.KeyEvent.bKeyDown &&
-									rec.Event.KeyEvent.wVirtualKeyCode == VK_ESCAPE)
-								{
-									Need_Redraw = true; // перерисовать панели
-									break;
-								}
-							}
+							Need_Redraw = true;
 							break;
+
+							//TODO нужно перестраивать дерево файлов после сохранения
+
 						case VK_F10:
 							Can_Run = false;
 							break;
@@ -541,12 +530,10 @@ bool AsCommander::Show_Config_Window()
 				SaveOptionsToIni();
 				saved = true;
 				// пометка перерисовки основного интерфейса
-				Need_Redraw = true;
 				goto finish; // выйти из цикла и восстановить курсор
 
 			case VK_ESCAPE:
 				// отмена — не сохраняем, просто выходим
-				Need_Redraw = true;
 				goto finish;
 			}
 		}
@@ -555,16 +542,8 @@ bool AsCommander::Show_Config_Window()
 finish:
 	// Восстановить курсор
 	SetConsoleCursorInfo(Std_Output_Handle, &oldCursorInfo);
-
-	// Перерисуем основной экран (если нужно)
-	if (Need_Redraw)
-	{
-		Draw();
-
-		// Ваш основной Draw() вызов в цикле сделает перерисовку.
-		// Здесь можно вызвать Draw() напрямую, но лучше пометить Need_Redraw = true и позволить основному циклу перерисовать.
-	}
-
+	// Очистить буфер ввода от остаточных нажатий (исправляет зависание)
+	FlushConsoleInputBuffer(Std_Input_Handle);
 	return saved;
 }
 
