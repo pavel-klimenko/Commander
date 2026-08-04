@@ -8,7 +8,6 @@ Options GlobalOptions;
 
 wchar_t CONFIG_INI[MAX_PATH];
 
-
 void LoadOptionsFromIni()
 {
 	wchar_t buf[32];

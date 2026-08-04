@@ -8,9 +8,6 @@ SPos::SPos(unsigned short x_pos, unsigned short y_pos, unsigned short screen_wid
 }
 //------------------------------------------------------------------------------------------------------------
 
-
-
-
 // SText_Pos
 //------------------------------------------------------------------------------------------------------------
 SText_Pos::SText_Pos(unsigned short x_pos, unsigned short y_pos, unsigned short screen_width, unsigned short attributes)
@@ -19,9 +16,6 @@ SText_Pos::SText_Pos(unsigned short x_pos, unsigned short y_pos, unsigned short 
 }
 //------------------------------------------------------------------------------------------------------------
 
-
-
-
 // SArea_Pos
 //------------------------------------------------------------------------------------------------------------
 SArea_Pos::SArea_Pos(unsigned short x_pos, unsigned short y_pos, unsigned short screen_width, unsigned char width, unsigned char height)
@@ -29,9 +23,6 @@ SArea_Pos::SArea_Pos(unsigned short x_pos, unsigned short y_pos, unsigned short 
 {
 }
 //------------------------------------------------------------------------------------------------------------
-
-
-
 
 // ASymbol
 //------------------------------------------------------------------------------------------------------------

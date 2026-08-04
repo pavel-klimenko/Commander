@@ -82,7 +82,6 @@ bool AsCommander::Init()
 	Right_Panel = new APanel(half_width, 0, half_width, Screen_Buffer_Info.dwSize.Y - 2, Screen_Buffer, Screen_Buffer_Info.dwSize.X);
 
 	Build_Menu();
-
 	Left_Panel->Get_Directory_Files(std::wstring(curr_dir) );
 
 	InitConfigPath();
@@ -129,26 +128,23 @@ void AsCommander::Run()
 								}
 							}
 							break;
-						case VK_F3:
+						case VK_F2:
 							View_File();
 							Need_Redraw = true;
 							break;
-						case VK_F7:
+						case VK_F4:
 							Make_Directory();
 							Need_Redraw = true;
 							break;
-						case VK_F8:
+						case VK_F5:
 							AsCommander::Delete_Selected();
 							Need_Redraw = true;
 							break;
-						case VK_F9:
+						case VK_F6:
 							Show_Config_Window();
 							Need_Redraw = true;
 							break;
-
-							//TODO нужно перестраивать дерево файлов после сохранения
-
-						case VK_F10:
+						case VK_F7:
 							Can_Run = false;
 							break;
 						case VK_UP:
@@ -171,7 +167,7 @@ void AsCommander::Run()
 
 		if (Need_Redraw)
 		{
-			if (! Draw() )
+			if (!Draw() )
 				return;
 
 			Need_Redraw = false;
@@ -226,15 +222,12 @@ void AsCommander::Build_Menu()
 	int x_step = Screen_Buffer_Info.dwSize.X / 10;
 
 	Add_Next_Menu_Item(index, x_pos, x_step, L"F1", L"Help");
-	Add_Next_Menu_Item(index, x_pos, x_step, L"F2", L"UserMenu");
-	Add_Next_Menu_Item(index, x_pos, x_step, L"F3", L"View");
-	Add_Next_Menu_Item(index, x_pos, x_step, L"F4", L"Edit");
-	Add_Next_Menu_Item(index, x_pos, x_step, L"F5", L"Copy");
-	Add_Next_Menu_Item(index, x_pos, x_step, L"F6", L"RenMov");
-	Add_Next_Menu_Item(index, x_pos, x_step, L"F7", L"MakeDir");
-	Add_Next_Menu_Item(index, x_pos, x_step, L"F8", L"Delete");
-	Add_Next_Menu_Item(index, x_pos, x_step, L"F9", L"Config");
-	Add_Next_Menu_Item(index, x_pos, x_step, L"F10", L"Quit");
+	Add_Next_Menu_Item(index, x_pos, x_step, L"F2", L"View");
+	Add_Next_Menu_Item(index, x_pos, x_step, L"F3", L"Copy"); //TODO
+	Add_Next_Menu_Item(index, x_pos, x_step, L"F4", L"MakeDir");
+	Add_Next_Menu_Item(index, x_pos, x_step, L"F5", L"Delete");
+	Add_Next_Menu_Item(index, x_pos, x_step, L"F6", L"Config");
+	Add_Next_Menu_Item(index, x_pos, x_step, L"F7", L"Quit");
 }
 //------------------------------------------------------------------------------------------------------------
 void AsCommander::Show_Help_Window()
@@ -253,26 +246,19 @@ void AsCommander::Show_Help_Window()
 
 	Draw_Text(Screen_Buffer, pos, L"F1 – Show help");
 	pos.Y_Pos++;
-	Draw_Text(Screen_Buffer, pos, L"F2 – User menu");
+	Draw_Text(Screen_Buffer, pos, L"F2 – View file");
 	pos.Y_Pos++;
-	Draw_Text(Screen_Buffer, pos, L"F3 – View file");
+	Draw_Text(Screen_Buffer, pos, L"F3 – Copy");
 	pos.Y_Pos++;
-	Draw_Text(Screen_Buffer, pos, L"F4 – Edit file");
+	Draw_Text(Screen_Buffer, pos, L"F4 – Create directory");
 	pos.Y_Pos++;
-	Draw_Text(Screen_Buffer, pos, L"F5 – Copy");
+	Draw_Text(Screen_Buffer, pos, L"F5 – Delete");
 	pos.Y_Pos++;
-	Draw_Text(Screen_Buffer, pos, L"F6 – Rename / Move");
+	Draw_Text(Screen_Buffer, pos, L"F6 – Configuration");
 	pos.Y_Pos++;
-	Draw_Text(Screen_Buffer, pos, L"F7 – Create directory");
-	pos.Y_Pos++;
-	Draw_Text(Screen_Buffer, pos, L"F8 – Delete");
-	pos.Y_Pos++;
-	Draw_Text(Screen_Buffer, pos, L"F9 – Configuration");
-	pos.Y_Pos++;
-	Draw_Text(Screen_Buffer, pos, L"F10 – Quit");
+	Draw_Text(Screen_Buffer, pos, L"F7 – Quit");
 
-	WriteConsoleOutput(Screen_Buffer_Handle, Screen_Buffer,
-		Screen_Buffer_Info.dwSize, { 0,0 }, &Screen_Buffer_Info.srWindow);
+	WriteConsoleOutput(Screen_Buffer_Handle, Screen_Buffer, Screen_Buffer_Info.dwSize, { 0,0 }, &Screen_Buffer_Info.srWindow);
 }
 
 void AsCommander::View_File()
@@ -544,6 +530,9 @@ finish:
 	SetConsoleCursorInfo(Std_Output_Handle, &oldCursorInfo);
 	// Очистить буфер ввода от остаточных нажатий (исправляет зависание)
 	FlushConsoleInputBuffer(Std_Input_Handle);
+
+	Init();
+
 	return saved;
 }
 
