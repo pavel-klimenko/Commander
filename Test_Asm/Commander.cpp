@@ -1,10 +1,7 @@
 ﻿#include "Commander.h"
 #include "Options.h"
+#include <memory>
 
-
-//TODO интегрировать указатели
-//TODO оптимизация кода по памяти (получения памяти, ручная очистка памяти)
-//TODO тест расходов памяти до и после оптимизации
 //TODO использовать ассемблерные функции
 //TODO stl итераторы рассмотреть
 
@@ -286,13 +283,13 @@ void AsCommander::View_File()
 		return;
 	}
 
-
+	const size_t BUF_SZ = 4096;
+	std::unique_ptr<wchar_t[]> buf(new wchar_t[BUF_SZ]);
 	std::wstring content;
-	wchar_t buffer[1024];
-
-	while (fgetws(buffer, 1024, f))
-		content += buffer;
-
+	while (fgetws(buf.get(), (int)BUF_SZ, f))
+	{
+		content.append(buf.get());
+	}
 	fclose(f);
 
 	MessageBoxW(NULL, content.c_str(), file->File_Name.c_str(), MB_OK);
@@ -389,8 +386,6 @@ void AsCommander::Make_Directory()
 
 bool AsCommander::Show_Config_Window()
 {
-	// TODO подвисает после смены конфига
-
 	// Опции и подписи
 	static const wchar_t* const opt_names[] = {
 		L"Show hidden files",
@@ -438,13 +433,8 @@ bool AsCommander::Show_Config_Window()
 			wchar_t line[256];
 			swprintf_s(line, L"[%c] %s", opt_values[i] ? L'X' : L' ', opt_names[i]);
 
-			// Если подсвечено — рисуем инвертированным атрибутом
 			if (i == highlight)
 			{
-				// временно изменить атрибут в буфере: используем Draw_Text, но перед этим можно установить атрибут
-				// предполагается, что Draw_Text пишет в Screen_Buffer с учётом pos.Attribute
-				// если Draw_Text не поддерживает атрибут, можно рисовать обычным текстом — подсветка будет зависеть от реализации Help/Draw_Text
-				// Для совместимости просто добавим маркер ">" слева
 				wchar_t line2[300];
 				swprintf_s(line2, L"> %s", line);
 				Draw_Text(Screen_Buffer, pos, line2);
@@ -514,12 +504,9 @@ bool AsCommander::Show_Config_Window()
 				GlobalOptions.ConfirmOnDelete = opt_values[1];
 				GlobalOptions.UseQuickView = opt_values[2];
 				SaveOptionsToIni();
-				saved = true;
-				// пометка перерисовки основного интерфейса
-				goto finish; // выйти из цикла и восстановить курсор
+				goto finish;
 
 			case VK_ESCAPE:
-				// отмена — не сохраняем, просто выходим
 				goto finish;
 			}
 		}
@@ -618,10 +605,13 @@ bool AsCommander::Delete_File(const std::wstring& path)
 
 bool AsCommander::Delete_Directory_Recursive(const std::wstring& dir)
 {
+
 	WIN32_FIND_DATAW ffd;
 	HANDLE hFind = INVALID_HANDLE_VALUE;
-
-	std::wstring search_path = dir + L"\\*";
+	std::wstring search_path;
+	search_path.reserve(dir.size() + 3);
+	search_path = dir;
+	search_path += L"\\*";
 
 	hFind = FindFirstFileW(search_path.c_str(), &ffd);
 	if (hFind == INVALID_HANDLE_VALUE)
@@ -634,34 +624,27 @@ bool AsCommander::Delete_Directory_Recursive(const std::wstring& dir)
 		if (name == L"." || name == L"..")
 			continue;
 
-		std::wstring full_path = dir + L"\\" + name;
+		std::wstring full_path;
+		full_path.reserve(dir.size() + 1 + name.size());
+		full_path = dir;
+		full_path += L'\\';
+		full_path += name;
 
-		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
-		{
-			// рекурсивно удаляем вложенную директорию
-			if (!Delete_Directory_Recursive(full_path))
-			{
-				FindClose(hFind);
-				return false;
-			}
+
+		if (ffd.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+			if (!Delete_Directory_Recursive(full_path)) { FindClose(hFind); return false; }
+		} else {
+			if (!DeleteFileW(full_path.c_str())) { FindClose(hFind); return false; }
 		}
-		else
-		{
-			// удаляем файл
-			if (!DeleteFileW(full_path.c_str()))
-			{
-				FindClose(hFind);
-				return false;
-			}
-		}
+
+
 
 	} while (FindNextFileW(hFind, &ffd) != 0);
 
 	FindClose(hFind);
 
 	// удаляем саму директорию
-	if (!RemoveDirectoryW(dir.c_str()))
-		return false;
+	if (!RemoveDirectoryW(dir.c_str())) return false;
 
 	return true;
 }
